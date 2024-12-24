@@ -1,5 +1,7 @@
 #include <iostream>
 #include <SDL.h>
+#include <cstdlib>
+#include <ctime>
 
 const int WIDTH = 800, HEIGHT = 600; // Window dimensions
 const int CELL_SIZE = 10;
@@ -49,11 +51,28 @@ void renderGrid(SDL_Renderer *renderer) {
 
 // Update the blue blocks to fall
 void updateBlueBlocks() {
+    // Seed the random number generator (call this once in your program's initialization code)
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
+
     for (int y = GRID_HEIGHT - 2; y >= 0; --y) { // Start from the second-last row
         for (int x = 0; x < GRID_WIDTH; ++x) {
-            if (grid[y][x] == 2 && grid[y + 1][x] == 0) { // Check if block can fall
-                grid[y + 1][x] = 2; // Move block down
-                grid[y][x] = 0; // Clear previous position
+            if (grid[y][x] == 2) { // If the current cell is a blue block
+                if (grid[y + 1][x] == 0) { // Check if the cell below is empty
+                    // Move block down
+                    grid[y + 1][x] = 2;
+                    grid[y][x] = 0;
+                } else { // Cell below is filled
+                    // Determine random direction: -1 (left), 1 (right)
+                    int direction = (std::rand() % 2 == 0) ? -1 : 1;
+
+                    // Check if the block can move left or right
+                    int newX = x + direction;
+                    if (newX >= 0 && newX < GRID_WIDTH && grid[y + 1][newX] == 0) {
+                        // Move block diagonally left or right
+                        grid[y + 1][newX] = 2;
+                        grid[y][x] = 0;
+                    }
+                }
             }
         }
     }
@@ -111,9 +130,9 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        // Update every 8 frames
+        // Update every 6 frames
         frameCount++;
-        if (frameCount % 8 == 0) {
+        if (frameCount % 6 == 0) {
             updateBlueBlocks();
         }
 
